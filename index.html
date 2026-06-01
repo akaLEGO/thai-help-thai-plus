@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>เครื่องคำนวณ ไทยช่วยไทยพลัส (60/40)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&family=Sarabun:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0d2a3a;
+    --gov:#0e7c86;      /* รัฐช่วยจ่าย - teal */
+    --gov-soft:#d6f0f1;
+    --you:#e8743b;      /* คุณจ่ายเอง - warm */
+    --you-soft:#fbe6da;
+    --paper:#f4f1ea;
+    --card:#ffffff;
+    --line:#e3ddd1;
+    --muted:#6c7a82;
+    --gold:#caa24a;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:var(--paper);color:var(--ink);font-family:'Sarabun',sans-serif;}
+  body{
+    min-height:100vh;
+    background:
+      radial-gradient(900px 500px at 110% -10%, rgba(14,124,134,.10), transparent 60%),
+      radial-gradient(700px 500px at -10% 110%, rgba(232,116,59,.08), transparent 55%),
+      var(--paper);
+    padding:22px 16px 60px;
+    display:flex;justify-content:center;
+  }
+  .wrap{width:100%;max-width:520px;}
+
+  /* ---- Header ---- */
+  header{margin-bottom:18px;}
+  .kicker{font-family:'Kanit';font-weight:500;font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;color:var(--gov);}
+  h1{font-family:'Kanit';font-weight:700;font-size:1.85rem;line-height:1.12;margin:4px 0 8px;}
+  h1 .plus{color:var(--you);}
+  .badge6040{
+    display:inline-flex;align-items:center;gap:8px;
+    font-family:'Kanit';font-weight:600;font-size:.82rem;
+    background:var(--ink);color:#fff;padding:6px 12px;border-radius:999px;
+  }
+  .badge6040 b{color:var(--gold);}
+  .sub{font-size:.9rem;color:var(--muted);margin-top:10px;line-height:1.5;}
+
+  /* ---- Card ---- */
+  .card{
+    background:var(--card);border:1px solid var(--line);border-radius:20px;
+    padding:22px;margin-top:16px;
+    box-shadow:0 18px 40px -28px rgba(13,42,58,.45);
+  }
+  .card h2{font-family:'Kanit';font-weight:600;font-size:1.05rem;margin-bottom:4px;}
+  .card .hint{font-size:.82rem;color:var(--muted);margin-bottom:16px;}
+
+  /* ---- Input ---- */
+  .field{position:relative;}
+  .field label{display:block;font-family:'Kanit';font-weight:500;font-size:.85rem;color:var(--muted);margin-bottom:6px;}
+  .amount-box{
+    display:flex;align-items:center;gap:8px;
+    border:2px solid var(--line);border-radius:14px;background:#fbfaf6;
+    padding:6px 16px;transition:border-color .2s, box-shadow .2s;
+  }
+  .amount-box:focus-within{border-color:var(--gov);box-shadow:0 0 0 4px var(--gov-soft);}
+  .amount-box .cur{font-family:'Kanit';font-weight:600;font-size:1.4rem;color:var(--muted);}
+  .amount-box input{
+    border:0;outline:0;background:transparent;flex:1;width:100%;
+    font-family:'Kanit';font-weight:600;font-size:2rem;color:var(--ink);
+    -moz-appearance:textfield;
+  }
+  .amount-box input::-webkit-outer-spin-button,
+  .amount-box input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
+  .amount-box .unit{font-size:.9rem;color:var(--muted);font-family:'Sarabun';}
+
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;}
+  .chip{
+    border:1px solid var(--line);background:#fff;border-radius:999px;
+    padding:7px 14px;font-family:'Kanit';font-size:.85rem;font-weight:500;cursor:pointer;
+    color:var(--ink);transition:.15s;
+  }
+  .chip:hover{border-color:var(--gov);color:var(--gov);}
+  .chip.full{margin-left:auto;color:var(--you);border-color:var(--you-soft);}
+
+  /* ---- Result ---- */
+  .result{margin-top:22px;opacity:0;transform:translateY(8px);transition:.35s ease;}
+  .result.show{opacity:1;transform:none;}
+  .bar{display:flex;height:46px;border-radius:12px;overflow:hidden;border:1px solid var(--line);}
+  .bar .seg{display:flex;align-items:center;justify-content:center;color:#fff;font-family:'Kanit';font-weight:600;font-size:.95rem;transition:flex-basis .45s ease;white-space:nowrap;}
+  .bar .seg.gov{background:var(--gov);}
+  .bar .seg.you{background:var(--you);}
+  .bar .seg.over{background:#9aa6ac;}
+
+  .split{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px;}
+  .pane{border-radius:14px;padding:14px 16px;border:1px solid var(--line);}
+  .pane.gov{background:var(--gov-soft);border-color:#bfe6e8;}
+  .pane.you{background:var(--you-soft);border-color:#f6d3c2;}
+  .pane .ptitle{font-family:'Kanit';font-weight:600;font-size:.85rem;display:flex;align-items:center;gap:6px;}
+  .pane.gov .ptitle{color:var(--gov);}
+  .pane.you .ptitle{color:#c2552a;}
+  .pane .dot{width:9px;height:9px;border-radius:50%;display:inline-block;}
+  .pane.gov .dot{background:var(--gov);}
+  .pane.you .dot{background:var(--you);}
+  .pane .val{font-family:'Kanit';font-weight:700;font-size:1.55rem;margin-top:6px;line-height:1;}
+  .pane .val small{font-size:.85rem;font-weight:500;color:var(--muted);}
+  .pane .pct{font-size:.78rem;color:var(--muted);margin-top:3px;}
+
+  .note{
+    margin-top:14px;border-radius:12px;padding:11px 14px;font-size:.85rem;line-height:1.5;
+    display:none;align-items:flex-start;gap:8px;
+  }
+  .note.warn{display:flex;background:#fff4e6;border:1px solid #f6dcb0;color:#8a5a14;}
+  .note .ic{flex:0 0 auto;font-size:1rem;}
+
+  /* ---- Info / conditions ---- */
+  .rules{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px;}
+  .rule{border:1px solid var(--line);border-radius:14px;padding:13px 14px;background:#fbfaf6;}
+  .rule .rl{font-family:'Kanit';font-size:.8rem;color:var(--muted);font-weight:500;}
+  .rule .rv{font-family:'Kanit';font-weight:700;font-size:1.25rem;margin-top:3px;}
+  .rule .rv span{font-size:.8rem;font-weight:500;color:var(--muted);}
+  .rule.full{grid-column:1 / -1;display:flex;justify-content:space-between;align-items:center;background:var(--ink);border-color:var(--ink);}
+  .rule.full .rl,.rule.full .rv{color:#fff;}
+  .rule.full .rv{color:var(--gold);}
+
+  .timeline{font-size:.85rem;color:var(--muted);margin-top:14px;line-height:1.5;display:flex;gap:8px;align-items:flex-start;}
+  .timeline b{color:var(--ink);font-family:'Kanit';font-weight:600;}
+
+  /* ---- Tracker ---- */
+  .tracker-grid{display:grid;grid-template-columns:1fr;gap:12px;}
+  .mini{display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid var(--line);border-radius:12px;padding:10px 14px;background:#fbfaf6;}
+  .mini label{font-family:'Kanit';font-weight:500;font-size:.85rem;color:var(--ink);flex:1;}
+  .mini .mbox{display:flex;align-items:center;gap:4px;border:2px solid var(--line);border-radius:10px;background:#fff;padding:3px 10px;width:130px;}
+  .mini .mbox:focus-within{border-color:var(--gov);}
+  .mini .mbox input{border:0;outline:0;width:100%;text-align:right;font-family:'Kanit';font-weight:600;font-size:1rem;background:transparent;color:var(--ink);}
+  .mini .mbox span{font-size:.78rem;color:var(--muted);}
+  .remain{margin-top:14px;background:var(--gov-soft);border:1px solid #bfe6e8;border-radius:14px;padding:14px 16px;}
+  .remain .rt{font-family:'Kanit';font-weight:500;font-size:.85rem;color:var(--gov);}
+  .remain .rval{font-family:'Kanit';font-weight:700;font-size:1.8rem;color:var(--gov);line-height:1;margin-top:4px;}
+  .remain .rday{font-size:.82rem;color:var(--muted);margin-top:6px;}
+
+  /* ---- Split bill ---- */
+  .stepper{display:flex;align-items:center;gap:0;border:2px solid var(--line);border-radius:12px;overflow:hidden;width:148px;background:#fff;}
+  .stepper button{border:0;background:#fbfaf6;width:42px;height:44px;font-family:'Kanit';font-size:1.4rem;font-weight:600;color:var(--gov);cursor:pointer;line-height:1;}
+  .stepper button:active{background:var(--gov-soft);}
+  .stepper input{border:0;outline:0;width:100%;text-align:center;font-family:'Kanit';font-weight:700;font-size:1.25rem;color:var(--ink);background:transparent;-moz-appearance:textfield;}
+  .stepper input::-webkit-outer-spin-button,.stepper input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
+  .row2{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;}
+  .row2 .field{flex:1;min-width:150px;}
+
+  .splitres{margin-top:20px;opacity:0;transform:translateY(8px);transition:.35s ease;}
+  .splitres.show{opacity:1;transform:none;}
+  .reco{background:var(--ink);color:#fff;border-radius:16px;padding:16px 18px;}
+  .reco .rh{font-family:'Kanit';font-weight:500;font-size:.82rem;color:var(--gold);letter-spacing:.04em;}
+  .reco .rbig{font-family:'Kanit';font-weight:700;font-size:1.35rem;margin-top:4px;line-height:1.25;}
+  .reco .rbig b{color:var(--gold);}
+
+  .people{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;}
+  .pcard{flex:1 1 88px;min-width:86px;border:1px solid var(--line);border-radius:12px;padding:12px 8px;text-align:center;background:#fbfaf6;}
+  .pcard .pic{font-size:1.2rem;}
+  .pcard .pn{font-family:'Kanit';font-size:.72rem;color:var(--muted);margin-top:2px;}
+  .pcard .pv{font-family:'Kanit';font-weight:700;font-size:1.6rem;color:var(--ink);margin-top:5px;line-height:1;}
+  .pcard .plbl{font-size:.7rem;color:var(--muted);font-weight:500;margin-top:3px;}
+  .pcard .pbd{margin-top:8px;border-top:1px dashed var(--line);padding-top:8px;display:flex;flex-direction:column;gap:4px;}
+  .pcard .pbd span{display:block;width:100%;font-family:'Kanit';font-size:.82rem;font-weight:600;}
+  .pcard .pbd .pself{color:var(--you);}
+  .pcard .pbd .pgov{color:var(--gov);}
+
+  .sumgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px;}
+  .sumbox{border-radius:14px;padding:13px 15px;border:1px solid var(--line);}
+  .sumbox.gov{background:var(--gov-soft);border-color:#bfe6e8;}
+  .sumbox.cash{background:var(--you-soft);border-color:#f6d3c2;}
+  .sumbox .sl{font-family:'Kanit';font-weight:600;font-size:.8rem;}
+  .sumbox.gov .sl{color:var(--gov);}
+  .sumbox.cash .sl{color:#c2552a;}
+  .sumbox .sv{font-family:'Kanit';font-weight:700;font-size:1.5rem;margin-top:4px;line-height:1;}
+  .sumbox .ss{font-size:.74rem;color:var(--muted);margin-top:3px;}
+
+  .saveline{margin-top:14px;background:#eef7ee;border:1px solid #c9e6c9;border-radius:12px;padding:12px 14px;font-size:.86rem;line-height:1.5;color:#2f6b34;display:flex;gap:8px;align-items:flex-start;}
+  .saveline b{font-family:'Kanit';}
+
+  footer{text-align:center;font-size:.75rem;color:var(--muted);margin-top:26px;line-height:1.6;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="kicker">โครงการรัฐ · เป๋าตัง</div>
+    <h1>ไทยช่วยไทย<span class="plus">พลัส</span></h1>
+    <div class="badge6040">รัฐช่วย <b>60%</b> · คุณจ่าย <b>40%</b></div>
+    <p class="sub">กรอกยอดที่จะใช้จ่าย แล้วระบบจะแบ่งให้ว่ารัฐช่วยเท่าไร และคุณต้องจ่ายเองเท่าไร พร้อมตรวจเพดานสิทธิให้อัตโนมัติ</p>
+  </header>
+
+  <!-- Calculator -->
+  <section class="card">
+    <h2>คำนวณยอดที่ต้องจ่าย</h2>
+    <p class="hint">ใส่ราคาสินค้า/บริการต่อครั้ง (เพดานใช้สิทธิ 200 บาท/วัน)</p>
+
+    <div class="field">
+      <label for="amt">ยอดใช้จ่าย</label>
+      <div class="amount-box">
+        <span class="cur">฿</span>
+        <input id="amt" type="number" inputmode="decimal" placeholder="0" min="0" step="1" autocomplete="off">
+        <span class="unit">บาท</span>
+      </div>
+      <div class="chips">
+        <button class="chip" data-v="50">50</button>
+        <button class="chip" data-v="100">100</button>
+        <button class="chip" data-v="150">150</button>
+        <button class="chip full" data-v="200">เต็มสิทธิ 200</button>
+      </div>
+    </div>
+
+    <div class="result" id="result">
+      <div class="bar">
+        <div class="seg gov" id="barGov">รัฐ 60%</div>
+        <div class="seg you" id="barYou">คุณ 40%</div>
+        <div class="seg over" id="barOver" style="flex-basis:0;display:none"></div>
+      </div>
+
+      <div class="split">
+        <div class="pane gov">
+          <div class="ptitle"><span class="dot"></span> รัฐช่วยจ่าย</div>
+          <div class="val">฿<span id="govVal">0</span></div>
+          <div class="pct" id="govPct">60% ของยอด</div>
+        </div>
+        <div class="pane you">
+          <div class="ptitle"><span class="dot"></span> คุณจ่ายเอง</div>
+          <div class="val">฿<span id="youVal">0</span></div>
+          <div class="pct" id="youPct">40% ของยอด</div>
+        </div>
+      </div>
+
+      <div class="note warn" id="overNote">
+        <span class="ic">⚠️</span>
+        <span id="overText"></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Split bill -->
+  <section class="card">
+    <h2>หารกันหลายคน · จ่ายให้คุ้มที่สุด</h2>
+    <p class="hint">กระจายบิลให้แต่ละคนจ่ายผ่านเป๋าตังของตัวเอง (รับสิทธิคนละไม่เกิน 200) ส่วนเกินเติมเงินจ่ายในแอปได้ แอปคำนวณให้อัตโนมัติ</p>
+
+    <div class="row2">
+      <div class="field" style="flex:2">
+        <label for="bill">ยอดบิลรวม</label>
+        <div class="amount-box">
+          <span class="cur">฿</span>
+          <input id="bill" type="number" inputmode="decimal" placeholder="0" min="0" step="1" autocomplete="off">
+          <span class="unit">บาท</span>
+        </div>
+      </div>
+      <div class="field">
+        <label for="ppl">คนที่มีสิทธิ</label>
+        <div class="stepper">
+          <button type="button" id="minus">−</button>
+          <input id="ppl" type="number" inputmode="numeric" value="2" min="1" max="20">
+          <button type="button" id="plus">+</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="splitres" id="splitres">
+      <div class="reco">
+        <div class="rh">วิธีที่คุ้มที่สุด</div>
+        <div class="rbig" id="recoText"></div>
+      </div>
+
+      <div class="people" id="people"></div>
+
+      <div class="sumgrid">
+        <div class="sumbox gov">
+          <div class="sl">รัฐช่วยรวมทั้งกลุ่ม</div>
+          <div class="sv">฿<span id="sGov">0</span></div>
+          <div class="ss" id="sGovSub">—</div>
+        </div>
+        <div class="sumbox cash">
+          <div class="sl">กลุ่มจ่ายเองรวม</div>
+          <div class="sv">฿<span id="sCash">0</span></div>
+          <div class="ss" id="sCashSub">เฉลี่ยคนละ —</div>
+        </div>
+      </div>
+
+      <div class="saveline" id="saveLine">
+        <span>✅</span><span id="saveText"></span>
+      </div>
+
+      <div class="note warn" id="splitWarn">
+        <span class="ic">⚠️</span><span id="splitWarnText"></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Conditions -->
+  <section class="card">
+    <h2>เงื่อนไขวงเงิน</h2>
+    <p class="hint">หลักเกณฑ์สำคัญของโครงการ (สิทธิไม่ทบไปเดือนถัดไป)</p>
+    <div class="rules">
+      <div class="rule">
+        <div class="rl">ต่อวัน · ใช้สิทธิได้</div>
+        <div class="rv">฿200 <span>/ วัน</span></div>
+      </div>
+      <div class="rule">
+        <div class="rl">ต่อวัน · รัฐ / คุณ</div>
+        <div class="rv">120 <span>/ 80</span></div>
+      </div>
+      <div class="rule">
+        <div class="rl">ต่อเดือน · รัฐช่วย</div>
+        <div class="rv">฿1,000 <span>/ คน</span></div>
+      </div>
+      <div class="rule">
+        <div class="rl">รวม 4 เดือน</div>
+        <div class="rv">฿4,000 <span>/ คน</span></div>
+      </div>
+      <div class="rule full">
+        <div class="rl">ระยะเวลาโครงการ</div>
+        <div class="rv">1 มิ.ย. – 30 ก.ย. 2569</div>
+      </div>
+    </div>
+    <div class="timeline">
+      <span>💡</span>
+      <span>ถ้าใช้สิทธิรัฐเต็มเพดานวันละ 120 บาท จะใช้สิทธิรัฐครบ 1,000 บาท/เดือนได้ภายในราว <b>9 วัน</b> ต่อเดือน</span>
+    </div>
+  </section>
+
+  <!-- Tracker -->
+  <section class="card">
+    <h2>ติดตามสิทธิคงเหลือเดือนนี้</h2>
+    <p class="hint">กรอกยอดที่รัฐช่วยจ่ายไปแล้วในเดือนนี้ เพื่อดูสิทธิที่เหลือ</p>
+    <div class="tracker-grid">
+      <div class="mini">
+        <label for="used">รัฐช่วยจ่ายไปแล้วเดือนนี้</label>
+        <div class="mbox"><input id="used" type="number" inputmode="decimal" placeholder="0" min="0"><span>฿</span></div>
+      </div>
+    </div>
+    <div class="remain">
+      <div class="rt">สิทธิรัฐคงเหลือเดือนนี้</div>
+      <div class="rval">฿<span id="remainVal">1,000</span></div>
+      <div class="rday">ใช้สิทธิรัฐเต็มเพดานได้อีกราว <b id="remainDay">9</b> วัน · เทียบยอดใช้จ่ายรวมได้อีก ฿<span id="remainSpend">1,667</span></div>
+    </div>
+  </section>
+
+  <footer>
+    เครื่องมือช่วยคำนวณเบื้องต้นตามเงื่อนไข 60/40 เท่านั้น<br>โปรดยึดยอดและสิทธิจริงจากแอป "เป๋าตัง" เป็นหลัก
+  </footer>
+</div>
+
+<script>
+  const DAILY_CAP = 200;     // เพดานยอดใช้สิทธิต่อวัน
+  const GOV_RATE = 0.6;
+  const YOU_RATE = 0.4;
+  const GOV_DAILY = DAILY_CAP * GOV_RATE; // 120
+  const MONTH_GOV = 1000;
+
+  const amt = document.getElementById('amt');
+  const result = document.getElementById('result');
+  const govVal = document.getElementById('govVal');
+  const youVal = document.getElementById('youVal');
+  const govPct = document.getElementById('govPct');
+  const youPct = document.getElementById('youPct');
+  const barGov = document.getElementById('barGov');
+  const barYou = document.getElementById('barYou');
+  const barOver = document.getElementById('barOver');
+  const overNote = document.getElementById('overNote');
+  const overText = document.getElementById('overText');
+
+  const fmt = n => n.toLocaleString('th-TH', {minimumFractionDigits: (n % 1 === 0 ? 0 : 2), maximumFractionDigits: 2});
+
+  function calc(){
+    const p = parseFloat(amt.value) || 0;
+    if(p <= 0){ result.classList.remove('show'); return; }
+    result.classList.add('show');
+
+    const eligible = Math.min(p, DAILY_CAP);   // ส่วนที่เข้าเงื่อนไขรับสิทธิ
+    const gov = eligible * GOV_RATE;            // รัฐช่วย 60% (สูงสุด 120)
+    const excess = Math.max(0, p - DAILY_CAP);  // ส่วนเกินเพดาน จ่ายเองเต็ม
+    const you = eligible * YOU_RATE + excess;
+
+    govVal.textContent = fmt(gov);
+    youVal.textContent = fmt(you);
+
+    // bar widths based on full price p
+    const govW = (gov / p) * 100;
+    const youOnElig = (eligible * YOU_RATE / p) * 100;
+    const overW = (excess / p) * 100;
+    barGov.style.flexBasis = govW + '%';
+    barYou.style.flexBasis = youOnElig + '%';
+    if(excess > 0){
+      barOver.style.display = 'flex';
+      barOver.style.flexBasis = overW + '%';
+      barOver.textContent = overW > 12 ? 'จ่ายเต็ม' : '';
+      govPct.textContent = 'เต็มเพดานวันละ 120 บาท';
+      youPct.textContent = '80 (40%) + ส่วนเกิน ' + fmt(excess);
+      overText.innerHTML = 'ยอดเกินเพดานวันละ 200 บาท ส่วนที่เกิน <b>' + fmt(excess) + ' บาท</b> ไม่ได้รับสิทธิ ต้องจ่ายเองเต็มจำนวน';
+      overNote.classList.add('warn');
+    }else{
+      barOver.style.display = 'none';
+      govPct.textContent = '60% ของยอด';
+      youPct.textContent = '40% ของยอด';
+      overNote.classList.remove('warn');
+    }
+    barGov.textContent = govW > 14 ? 'รัฐ ' + fmt(gov) : '';
+    barYou.textContent = youOnElig > 14 ? 'คุณ ' + fmt(eligible*YOU_RATE) : '';
+  }
+
+  amt.addEventListener('input', calc);
+  document.querySelectorAll('.chip').forEach(c=>{
+    c.addEventListener('click', ()=>{ amt.value = c.dataset.v; calc(); amt.focus(); });
+  });
+
+  // Tracker
+  const used = document.getElementById('used');
+  const remainVal = document.getElementById('remainVal');
+  const remainDay = document.getElementById('remainDay');
+  const remainSpend = document.getElementById('remainSpend');
+
+  function track(){
+    const u = Math.min(Math.max(parseFloat(used.value)||0,0), MONTH_GOV);
+    const remain = MONTH_GOV - u;
+    remainVal.textContent = fmt(remain);
+    remainDay.textContent = Math.ceil(remain / GOV_DAILY);
+    remainSpend.textContent = fmt(remain / GOV_RATE); // ยอดใช้จ่ายรวมที่ยังได้สิทธิ
+  }
+  used.addEventListener('input', track);
+  track();
+
+  // ---- Split bill ----
+  const bill = document.getElementById('bill');
+  const ppl = document.getElementById('ppl');
+  const splitres = document.getElementById('splitres');
+  const recoText = document.getElementById('recoText');
+  const peopleEl = document.getElementById('people');
+  const sGov = document.getElementById('sGov');
+  const sGovSub = document.getElementById('sGovSub');
+  const sCash = document.getElementById('sCash');
+  const sCashSub = document.getElementById('sCashSub');
+  const saveLine = document.getElementById('saveLine');
+  const saveText = document.getElementById('saveText');
+  const splitWarn = document.getElementById('splitWarn');
+  const splitWarnText = document.getElementById('splitWarnText');
+
+  document.getElementById('plus').addEventListener('click', ()=>{ ppl.value = Math.min(20,(parseInt(ppl.value)||1)+1); splitBill(); });
+  document.getElementById('minus').addEventListener('click', ()=>{ ppl.value = Math.max(1,(parseInt(ppl.value)||1)-1); splitBill(); });
+
+  function splitBill(){
+    const B = parseFloat(bill.value) || 0;
+    const N = Math.max(1, parseInt(ppl.value) || 1);
+    if(B <= 0){ splitres.classList.remove('show'); return; }
+    splitres.classList.add('show');
+
+    // หารบิลเท่ากันต่อคน แล้วแยกส่วน
+    const perBill   = B / N;                          // ยอดบิลของแต่ละคน
+    const perApp    = Math.min(perBill, DAILY_CAP);   // ส่วนที่ได้สิทธิ (<=200)
+    const perExcess = Math.max(0, perBill - DAILY_CAP); // ส่วนเกิน ไม่ได้สิทธิ
+    const perGov    = perApp * GOV_RATE;              // รัฐช่วย/คน
+    const perSelf   = perApp * YOU_RATE + perExcess;  // จ่ายเองจากกระเป๋าตัง/คน
+
+    const eligible  = perApp * N;        // ยอดที่ได้สิทธิรวม
+    const govTotal  = perGov * N;        // รัฐช่วยรวม
+    const excess    = perExcess * N;     // ส่วนเกินรวม
+    const selfTotal = perSelf * N;       // จ่ายเองรวมทั้งกลุ่ม
+
+    // ข้อความแนะนำ
+    if(excess > 0){
+      recoText.innerHTML = 'ให้ทั้ง <b>' + N + ' คน</b> จ่ายผ่านเป๋าตังคนละ <b>฿' + fmt(perBill) + '</b>'
+        + ' โดยเติมเงินส่วนต่างในแอป — รัฐช่วยคนละ ฿' + fmt(perGov) + ' จ่ายเองคนละ <b>฿' + fmt(perSelf) + '</b>';
+    } else {
+      recoText.innerHTML = 'ให้ทั้ง <b>' + N + ' คน</b> จ่ายผ่านเป๋าตังคนละ <b>฿' + fmt(perBill) + '</b>'
+        + ' — รัฐช่วยคนละ ฿' + fmt(perGov) + ' จ่ายเองคนละ <b>฿' + fmt(perSelf) + '</b>';
+    }
+
+    // การ์ดรายคน (สูงสุด 8 ใบ)
+    peopleEl.innerHTML = '';
+    const show = Math.min(N, 8);
+    for(let i=0;i<show;i++){
+      const div = document.createElement('div');
+      div.className = 'pcard';
+      div.innerHTML = '<div class="pic">🧑</div><div class="pn">คนที่ '+(i+1)+'</div>'
+        + '<div class="pv">฿'+fmt(perBill)+'</div>'
+        + '<div class="plbl">ยอดของเขา</div>'
+        + '<div class="pbd"><span class="pself">จ่ายเอง ฿'+fmt(perSelf)+'</span><span class="pgov">รัฐช่วย ฿'+fmt(perGov)+'</span></div>';
+      peopleEl.appendChild(div);
+    }
+    if(N>show){
+      const more = document.createElement('div');
+      more.className='pcard';
+      more.innerHTML='<div class="pic">➕</div><div class="pn">และอีก</div><div class="pv">'+(N-show)+' คน</div><div class="plbl">เหมือนกัน</div>';
+      peopleEl.appendChild(more);
+    }
+
+    sGov.textContent = fmt(govTotal);
+    sGovSub.textContent = '60% ของยอดที่ได้สิทธิ ฿' + fmt(eligible);
+    sCash.textContent = fmt(selfTotal);
+    sCashSub.textContent = 'เฉลี่ยคนละ ฿' + fmt(perSelf);
+
+    // เทียบกับให้คนเดียวจ่ายทั้งบิล
+    const soloGov = Math.min(B, DAILY_CAP) * GOV_RATE;
+    const extra = govTotal - soloGov;
+    if(N>1 && extra > 0){
+      saveLine.style.display = 'flex';
+      saveText.innerHTML = 'การหารกันดึงสิทธิรัฐได้เพิ่ม <b>฿' + fmt(extra) + '</b> เทียบกับให้คนเดียวจ่ายทั้งบิล (กลุ่มจ่ายเองน้อยลงเท่ากัน)';
+    } else {
+      saveLine.style.display = 'none';
+    }
+
+    // เตือนส่วนเกิน
+    if(excess > 0){
+      const needed = Math.ceil(B / DAILY_CAP);
+      splitWarn.classList.add('warn');
+      splitWarnText.innerHTML = 'บิลเกินเพดานสิทธิรวมของกลุ่ม (' + N + ' คน × 200 = ฿' + fmt(eligible) + ')'
+        + ' ส่วนเกิน <b>฿' + fmt(excess) + '</b> ไม่ได้รับสิทธิ ต้องจ่ายเองเต็มจำนวน (เติมเงินจ่ายผ่านแอปได้ แอปคำนวณให้อัตโนมัติ)'
+        + ' — ถ้าอยากได้สิทธิเต็มบิลต้องมีอย่างน้อย <b>' + needed + ' คน</b> หรือทยอยจ่ายส่วนเกินในวันถัดไป';
+    } else {
+      splitWarn.classList.remove('warn');
+    }
+  }
+  bill.addEventListener('input', splitBill);
+  ppl.addEventListener('input', splitBill);
+</script>
+</body>
+</html>
