@@ -179,6 +179,14 @@
   .saveline{margin-top:14px;background:#eef7ee;border:1px solid #c9e6c9;border-radius:12px;padding:12px 14px;font-size:.86rem;line-height:1.5;color:#2f6b34;display:flex;gap:8px;align-items:flex-start;}
   .saveline b{font-family:'Kanit';}
 
+  /* ---- Tabs ---- */
+  .tabs{display:flex;gap:5px;background:#fff;border:1px solid var(--line);border-radius:15px;padding:5px;box-shadow:0 12px 30px -24px rgba(13,42,58,.55);position:sticky;top:8px;z-index:5;}
+  .tab{flex:1;border:0;background:transparent;font-family:'Kanit';font-weight:600;font-size:.95rem;color:var(--muted);padding:12px 8px;border-radius:11px;cursor:pointer;transition:.18s;}
+  .tab.active{background:var(--ink);color:#fff;box-shadow:0 6px 14px -8px rgba(13,42,58,.6);}
+  .tab:not(.active):active{background:#f4f1ea;}
+  .panel{display:none;}
+  .panel.active{display:block;}
+
   /* ---- Support ---- */
   .support .sup-top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
   .sup-name{font-family:'Kanit';font-weight:600;font-size:1.02rem;}
@@ -209,7 +217,13 @@
     <p class="sub">กรอกยอดที่จะใช้จ่าย แล้วระบบจะแบ่งให้ว่ารัฐช่วยเท่าไร และคุณต้องจ่ายเองเท่าไร พร้อมตรวจเพดานสิทธิให้อัตโนมัติ</p>
   </header>
 
+  <div class="tabs" role="tablist">
+    <button type="button" class="tab active" data-tab="single">🧍 จ่ายคนเดียว</button>
+    <button type="button" class="tab" data-tab="split">👥 จ่ายหลายคน</button>
+  </div>
+
   <!-- Calculator -->
+  <div class="panel active" id="panel-single">
   <section class="card">
     <h2>คำนวณยอดที่ต้องจ่าย</h2>
     <p class="hint">ใส่ราคาสินค้า/บริการต่อครั้ง (เพดานใช้สิทธิ 200 บาท/วัน)</p>
@@ -255,8 +269,10 @@
       </div>
     </div>
   </section>
+  </div>
 
   <!-- Split bill -->
+  <div class="panel" id="panel-split">
   <section class="card">
     <h2>หารกันหลายคน · จ่ายให้คุ้มที่สุด</h2>
     <p class="hint">กระจายบิลให้แต่ละคนจ่ายผ่านเป๋าตังของตัวเอง (รับสิทธิคนละไม่เกิน 200) ส่วนเกินเติมเงินจ่ายในแอปได้ แอปคำนวณให้อัตโนมัติ</p>
@@ -310,6 +326,7 @@
       </div>
     </div>
   </section>
+  </div>
 
   <!-- Conditions -->
   <section class="card">
@@ -555,6 +572,21 @@
   }
   bill.addEventListener('input', splitBill);
   ppl.addEventListener('input', splitBill);
+
+  // ---- Tabs ----
+  const tabBtns = document.querySelectorAll('.tab');
+  const panels = {
+    single: document.getElementById('panel-single'),
+    split:  document.getElementById('panel-split')
+  };
+  tabBtns.forEach(t=>{
+    t.addEventListener('click', ()=>{
+      tabBtns.forEach(x=>x.classList.remove('active'));
+      t.classList.add('active');
+      Object.values(panels).forEach(p=>p.classList.remove('active'));
+      panels[t.dataset.tab].classList.add('active');
+    });
+  });
 
   // ---- Support ----
   const supBtn = document.getElementById('supBtn');
