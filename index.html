@@ -328,6 +328,23 @@
   </section>
   </div>
 
+  <!-- Tracker -->
+  <section class="card">
+    <h2>ติดตามสิทธิคงเหลือเดือนนี้</h2>
+    <p class="hint">กรอกยอดที่รัฐช่วยจ่ายไปแล้วในเดือนนี้ เพื่อดูสิทธิที่เหลือ</p>
+    <div class="tracker-grid">
+      <div class="mini">
+        <label for="used">รัฐช่วยจ่ายไปแล้วเดือนนี้</label>
+        <div class="mbox"><input id="used" type="number" inputmode="decimal" placeholder="0" min="0"><span>฿</span></div>
+      </div>
+    </div>
+    <div class="remain">
+      <div class="rt">สิทธิรัฐคงเหลือเดือนนี้</div>
+      <div class="rval">฿<span id="remainVal">1,000</span></div>
+      <div class="rday">ใช้สิทธิรัฐเต็มเพดานได้อีกราว <b id="remainDay">9</b> วัน · เทียบยอดใช้จ่ายรวมได้อีก ฿<span id="remainSpend">1,667</span></div>
+    </div>
+  </section>
+
   <!-- Conditions -->
   <section class="card">
     <h2>เงื่อนไขวงเงิน</h2>
@@ -357,23 +374,6 @@
     <div class="timeline">
       <span>💡</span>
       <span>ถ้าใช้สิทธิรัฐเต็มเพดานวันละ 120 บาท จะใช้สิทธิรัฐครบ 1,000 บาท/เดือนได้ภายในราว <b>9 วัน</b> ต่อเดือน</span>
-    </div>
-  </section>
-
-  <!-- Tracker -->
-  <section class="card">
-    <h2>ติดตามสิทธิคงเหลือเดือนนี้</h2>
-    <p class="hint">กรอกยอดที่รัฐช่วยจ่ายไปแล้วในเดือนนี้ เพื่อดูสิทธิที่เหลือ</p>
-    <div class="tracker-grid">
-      <div class="mini">
-        <label for="used">รัฐช่วยจ่ายไปแล้วเดือนนี้</label>
-        <div class="mbox"><input id="used" type="number" inputmode="decimal" placeholder="0" min="0"><span>฿</span></div>
-      </div>
-    </div>
-    <div class="remain">
-      <div class="rt">สิทธิรัฐคงเหลือเดือนนี้</div>
-      <div class="rval">฿<span id="remainVal">1,000</span></div>
-      <div class="rday">ใช้สิทธิรัฐเต็มเพดานได้อีกราว <b id="remainDay">9</b> วัน · เทียบยอดใช้จ่ายรวมได้อีก ฿<span id="remainSpend">1,667</span></div>
     </div>
   </section>
 
