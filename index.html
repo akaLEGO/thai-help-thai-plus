@@ -236,6 +236,23 @@
   .plan.a{border-left:4px solid var(--gov);}
   .plan.b{border-left:4px solid var(--you);}
 
+  /* ---- Custom split allocation ---- */
+  .segmented{display:flex;gap:5px;background:#fbfaf6;border:1px solid var(--line);border-radius:12px;padding:4px;margin-top:16px;}
+  .segbtn{flex:1;border:0;background:transparent;font-family:'Kanit';font-weight:600;font-size:.85rem;color:var(--muted);padding:9px 6px;border-radius:9px;cursor:pointer;transition:.15s;}
+  .segbtn.active{background:var(--ink);color:#fff;}
+  .allocbox{display:none;margin-top:14px;}
+  .allocbox.show{display:block;}
+  .allocbar{display:flex;height:30px;border-radius:9px;overflow:hidden;border:1px solid var(--line);}
+  .allocbar .aseg{display:flex;align-items:center;justify-content:center;color:#fff;font-family:'Kanit';font-weight:600;font-size:.72rem;white-space:nowrap;transition:flex-basis .15s;}
+  .allocrow{display:flex;align-items:center;gap:10px;margin-top:11px;}
+  .allocrow .arname{font-family:'Kanit';font-weight:600;font-size:.82rem;width:64px;flex:0 0 auto;display:flex;align-items:center;gap:5px;}
+  .allocrow .ardot{width:9px;height:9px;border-radius:50%;flex:0 0 auto;}
+  .allocrow input[type=range]{flex:1;min-width:0;accent-color:var(--gov);}
+  .allocrow .arval{font-family:'Kanit';font-weight:700;font-size:.82rem;width:90px;text-align:right;flex:0 0 auto;}
+  .allocrow .arval small{color:var(--muted);font-weight:500;font-size:.74rem;}
+  .alloc-eq{margin-top:13px;border:1px solid var(--line);background:#fff;border-radius:10px;padding:9px 13px;font-family:'Kanit';font-weight:600;font-size:.8rem;color:var(--gov);cursor:pointer;}
+  .alloc-eq:active{background:var(--gov-soft);}
+
   footer{text-align:center;font-size:.75rem;color:var(--muted);margin-top:26px;line-height:1.6;}
 </style>
 </head>
@@ -324,6 +341,17 @@
           <button type="button" id="plus">+</button>
         </div>
       </div>
+    </div>
+
+    <div class="segmented" id="splitMode">
+      <button type="button" class="segbtn active" data-mode="equal">หารเท่ากัน</button>
+      <button type="button" class="segbtn" data-mode="custom">กำหนดสัดส่วนเอง</button>
+    </div>
+
+    <div class="allocbox" id="allocBox">
+      <div class="allocbar" id="allocBar"></div>
+      <div id="allocRows"></div>
+      <button type="button" class="alloc-eq" id="allocEq">↺ เกลี่ยให้เท่ากัน</button>
     </div>
 
     <div class="splitres" id="splitres">
@@ -593,83 +621,176 @@
   const splitWarn = document.getElementById('splitWarn');
   const splitWarnText = document.getElementById('splitWarnText');
 
-  document.getElementById('plus').addEventListener('click', ()=>{ ppl.value = Math.min(20,(parseInt(ppl.value)||1)+1); splitBill(); });
-  document.getElementById('minus').addEventListener('click', ()=>{ ppl.value = Math.max(1,(parseInt(ppl.value)||1)-1); splitBill(); });
+  // โหมด: equal (หารเท่ากัน) / custom (กำหนดสัดส่วนเอง)
+  let splitMode = 'equal';
+  let weights = [];                       // % ต่อคน (รวม ~100) ใช้ตอนโหมด custom
+  const PCOL = ['#0e7c86','#e8743b','#caa24a','#5a8f4e','#7a6cd6','#c2552a','#3f8fa3','#b08534'];
+  const pcol = i => PCOL[i % PCOL.length];
+  const allocBox  = document.getElementById('allocBox');
+  const allocBar  = document.getElementById('allocBar');
+  const allocRows = document.getElementById('allocRows');
+
+  function ensureWeights(N){
+    if(weights.length !== N) weights = Array.from({length:N}, ()=> 100/N);
+  }
+  // ตั้ง % ของคนที่ i แล้วเกลี่ยที่เหลือให้คนอื่นตามสัดส่วนเดิม (รวมเป็น 100 เสมอ)
+  function setWeight(i, val){
+    const N = weights.length;
+    val = Math.max(0, Math.min(100, val));
+    if(N <= 1){ weights = [100]; return; }
+    const others = weights.reduce((s,w,j)=> j===i ? s : s+w, 0);
+    const remaining = 100 - val;
+    weights = weights.map((w,j)=> j===i ? val : (others <= 0 ? remaining/(N-1) : w/others*remaining));
+  }
+  function calcPerson(share){
+    const app = Math.min(share, DAILY_CAP);          // ยอดที่ได้สิทธิ (รัฐช่วย <=200)
+    const excess = Math.max(0, share - DAILY_CAP);   // ส่วนเกิน ไม่ได้สิทธิ
+    return { share, app, excess, gov: app*GOV_RATE, self: app*YOU_RATE + excess };
+  }
+
+  // สร้างแถวสไลเดอร์ใหม่ (เรียกเมื่อเข้าโหมด custom หรือจำนวนคนเปลี่ยน)
+  function renderAlloc(N){
+    ensureWeights(N);
+    allocRows.innerHTML = '';
+    for(let i=0;i<N;i++){
+      const row = document.createElement('div');
+      row.className = 'allocrow';
+      row.innerHTML = '<span class="arname"><span class="ardot" style="background:'+pcol(i)+'"></span>คนที่ '+(i+1)+'</span>'
+        + '<input type="range" min="0" max="100" step="1" value="'+Math.round(weights[i])+'" data-i="'+i+'">'
+        + '<span class="arval" id="arval'+i+'"></span>';
+      allocRows.appendChild(row);
+    }
+    allocRows.querySelectorAll('input[type=range]').forEach(r=>{
+      r.addEventListener('input', ()=>{ setWeight(parseInt(r.dataset.i), parseFloat(r.value)||0); syncAlloc(); splitBill(); });
+    });
+    syncAlloc();
+  }
+  // อัปเดตค่าสไลเดอร์/ป้าย/แถบ 100% โดยไม่สร้าง element ใหม่
+  function syncAlloc(){
+    const B = parseFloat(bill.value) || 0;
+    const N = weights.length;
+    allocBar.innerHTML = '';
+    for(let i=0;i<N;i++){
+      const r = allocRows.querySelector('input[data-i="'+i+'"]');
+      if(r && document.activeElement !== r) r.value = Math.round(weights[i]);
+      const lbl = document.getElementById('arval'+i);
+      if(lbl) lbl.innerHTML = Math.round(weights[i]) + '% <small>฿'+fmt(B*weights[i]/100)+'</small>';
+      const seg = document.createElement('div');
+      seg.className = 'aseg';
+      seg.style.flexBasis = weights[i] + '%';
+      seg.style.background = pcol(i);
+      seg.textContent = weights[i] >= 12 ? Math.round(weights[i])+'%' : '';
+      allocBar.appendChild(seg);
+    }
+  }
 
   function splitBill(){
     const B = parseFloat(bill.value) || 0;
     const N = Math.max(1, parseInt(ppl.value) || 1);
     if(B <= 0){ splitres.classList.remove('show'); return; }
     splitres.classList.add('show');
+    ensureWeights(N);
 
-    // หารบิลเท่ากันต่อคน แล้วแยกส่วน
-    const perBill   = B / N;                          // ยอดบิลของแต่ละคน
-    const perApp    = Math.min(perBill, DAILY_CAP);   // ส่วนที่ได้สิทธิ (<=333.33 → รัฐช่วย <=200)
-    const perExcess = Math.max(0, perBill - DAILY_CAP); // ส่วนเกิน ไม่ได้สิทธิ
-    const perGov    = perApp * GOV_RATE;              // รัฐช่วย/คน
-    const perSelf   = perApp * YOU_RATE + perExcess;  // จ่ายเองจากกระเป๋าตัง/คน
+    const custom  = splitMode === 'custom';
+    const fracs   = custom ? weights.map(w=>w/100) : Array.from({length:N}, ()=> 1/N);
+    const persons = fracs.map(f => calcPerson(B*f));
 
-    const eligible  = perApp * N;        // ยอดที่ได้สิทธิรวม
-    const govTotal  = perGov * N;        // รัฐช่วยรวม
-    const excess    = perExcess * N;     // ส่วนเกินรวม
-    const selfTotal = perSelf * N;       // จ่ายเองรวมทั้งกลุ่ม
+    const govTotal  = persons.reduce((s,p)=>s+p.gov, 0);
+    const selfTotal = persons.reduce((s,p)=>s+p.self, 0);
+    const excess    = persons.reduce((s,p)=>s+p.excess, 0);
+    const eligible  = persons.reduce((s,p)=>s+p.app, 0);
 
     // ข้อความแนะนำ
-    if(excess > 0){
-      recoText.innerHTML = 'ให้ทั้ง <b>' + N + ' คน</b> จ่ายผ่านเป๋าตังคนละ <b>฿' + fmt(perBill) + '</b>'
-        + ' โดยเติมเงินส่วนต่างในแอป — รัฐช่วยคนละ ฿' + fmt(perGov) + ' จ่ายเองคนละ <b>฿' + fmt(perSelf) + '</b>';
+    if(custom){
+      recoText.innerHTML = 'แต่ละคนจ่ายตามสัดส่วนที่ตั้งไว้ ผ่านเป๋าตังของตัวเอง'
+        + ' — รวมรัฐช่วย <b>฿'+fmt(govTotal)+'</b> · กลุ่มจ่ายเอง <b>฿'+fmt(selfTotal)+'</b>';
     } else {
-      recoText.innerHTML = 'ให้ทั้ง <b>' + N + ' คน</b> จ่ายผ่านเป๋าตังคนละ <b>฿' + fmt(perBill) + '</b>'
-        + ' — รัฐช่วยคนละ ฿' + fmt(perGov) + ' จ่ายเองคนละ <b>฿' + fmt(perSelf) + '</b>';
+      const p0 = persons[0];
+      recoText.innerHTML = 'ให้ทั้ง <b>'+N+' คน</b> จ่ายผ่านเป๋าตังคนละ <b>฿'+fmt(B/N)+'</b>'
+        + (excess>0 ? ' โดยเติมเงินส่วนต่างในแอป' : '')
+        + ' — รัฐช่วยคนละ ฿'+fmt(p0.gov)+' จ่ายเองคนละ <b>฿'+fmt(p0.self)+'</b>';
     }
 
     // การ์ดรายคน (สูงสุด 8 ใบ)
     peopleEl.innerHTML = '';
     const show = Math.min(N, 8);
     for(let i=0;i<show;i++){
+      const p = persons[i];
       const div = document.createElement('div');
       div.className = 'pcard';
-      div.innerHTML = '<div class="pic">🧑</div><div class="pn">คนที่ '+(i+1)+'</div>'
-        + '<div class="pv">฿'+fmt(perBill)+'</div>'
+      if(custom) div.style.borderTop = '3px solid ' + pcol(i);
+      div.innerHTML = '<div class="pic">🧑</div><div class="pn">คนที่ '+(i+1)+(custom ? ' · '+Math.round(weights[i])+'%' : '')+'</div>'
+        + '<div class="pv">฿'+fmt(p.share)+'</div>'
         + '<div class="plbl">ยอดของเขา</div>'
-        + '<div class="pbd"><span class="pself">จ่ายเอง ฿'+fmt(perSelf)+'</span><span class="pgov">รัฐช่วย ฿'+fmt(perGov)+'</span></div>';
+        + '<div class="pbd"><span class="pself">จ่ายเอง ฿'+fmt(p.self)+'</span><span class="pgov">รัฐช่วย ฿'+fmt(p.gov)+'</span></div>';
       peopleEl.appendChild(div);
     }
     if(N>show){
       const more = document.createElement('div');
       more.className='pcard';
-      more.innerHTML='<div class="pic">➕</div><div class="pn">และอีก</div><div class="pv">'+(N-show)+' คน</div><div class="plbl">เหมือนกัน</div>';
+      more.innerHTML='<div class="pic">➕</div><div class="pn">และอีก</div><div class="pv">'+(N-show)+' คน</div><div class="plbl">'+(custom?'ดูในแถบสัดส่วน':'เหมือนกัน')+'</div>';
       peopleEl.appendChild(more);
     }
 
     sGov.textContent = fmt(govTotal);
     sGovSub.textContent = '60% ของยอดที่ได้สิทธิ ฿' + fmt(eligible);
     sCash.textContent = fmt(selfTotal);
-    sCashSub.textContent = 'เฉลี่ยคนละ ฿' + fmt(perSelf);
+    sCashSub.textContent = custom ? 'ตามสัดส่วนที่ตั้งไว้' : 'เฉลี่ยคนละ ฿' + fmt(persons[0].self);
 
     // เทียบกับให้คนเดียวจ่ายทั้งบิล
     const soloGov = Math.min(B, DAILY_CAP) * GOV_RATE;
     const extra = govTotal - soloGov;
-    if(N>1 && extra > 0){
+    if(N>1 && extra > 0.005){
       saveLine.style.display = 'flex';
       saveText.innerHTML = 'การหารกันดึงสิทธิรัฐได้เพิ่ม <b>฿' + fmt(extra) + '</b> เทียบกับให้คนเดียวจ่ายทั้งบิล (กลุ่มจ่ายเองน้อยลงเท่ากัน)';
     } else {
       saveLine.style.display = 'none';
     }
 
-    // เตือนส่วนเกิน
-    if(excess > 0){
-      const needed = Math.ceil(B / DAILY_CAP);
+    // เตือนส่วนเกิน (และแนะนำเกลี่ยถ้าโหมด custom เสียสิทธิ)
+    if(excess > 0.005){
       splitWarn.classList.add('warn');
-      splitWarnText.innerHTML = 'บิลเกินเพดานสิทธิรวมของกลุ่ม (' + N + ' คน ซื้อได้ถึงคนละ ~333 = ฿' + fmt(eligible) + ' ที่ยังได้สิทธิเต็ม)'
-        + ' ส่วนเกิน <b>฿' + fmt(excess) + '</b> ไม่ได้รับสิทธิ ต้องจ่ายเอง (ผ่านเป๋าตัง) เต็มจำนวน (เติมเงินจ่ายผ่านแอปได้ แอปคำนวณให้อัตโนมัติ)'
-        + ' — ถ้าอยากได้สิทธิเต็มบิลต้องมีอย่างน้อย <b>' + needed + ' คน</b> หรือทยอยจ่ายส่วนเกินในวันถัดไป';
+      if(custom){
+        const lose = N * calcPerson(B/N).gov - govTotal;   // ถ้าหารเท่ากันจะได้รัฐช่วยเท่าไร
+        splitWarnText.innerHTML = 'มีบางคนได้ยอดเกิน ~333 บาท/วัน (รัฐช่วยแตะเพดาน 200) ส่วนเกินรวม <b>฿'+fmt(excess)+'</b> ไม่ได้รับสิทธิ ต้องจ่ายเอง (ผ่านเป๋าตัง) เต็มจำนวน'
+          + (lose>0.005 ? ' — ถ้าเกลี่ยให้เท่ากันจะได้สิทธิรัฐมากกว่านี้อีก <b>฿'+fmt(lose)+'</b>' : '');
+      } else {
+        const needed = Math.ceil(B / DAILY_CAP);
+        splitWarnText.innerHTML = 'บิลเกินเพดานสิทธิรวมของกลุ่ม (' + N + ' คน ซื้อได้ถึงคนละ ~333 = ฿' + fmt(eligible) + ' ที่ยังได้สิทธิเต็ม)'
+          + ' ส่วนเกิน <b>฿' + fmt(excess) + '</b> ไม่ได้รับสิทธิ ต้องจ่ายเอง (ผ่านเป๋าตัง) เต็มจำนวน (เติมเงินจ่ายผ่านแอปได้ แอปคำนวณให้อัตโนมัติ)'
+          + ' — ถ้าอยากได้สิทธิเต็มบิลต้องมีอย่างน้อย <b>' + needed + ' คน</b> หรือทยอยจ่ายส่วนเกินในวันถัดไป';
+      }
     } else {
       splitWarn.classList.remove('warn');
     }
   }
-  bill.addEventListener('input', splitBill);
-  ppl.addEventListener('input', splitBill);
+
+  function changePeople(delta){
+    ppl.value = Math.min(20, Math.max(1, (parseInt(ppl.value)||1) + delta));
+    weights = [];                                      // รีเซ็ตเป็นเท่ากันเมื่อจำนวนคนเปลี่ยน
+    if(splitMode==='custom') renderAlloc(parseInt(ppl.value));
+    splitBill();
+  }
+  document.getElementById('plus').addEventListener('click', ()=> changePeople(1));
+  document.getElementById('minus').addEventListener('click', ()=> changePeople(-1));
+  bill.addEventListener('input', ()=>{ if(splitMode==='custom') syncAlloc(); splitBill(); });
+  ppl.addEventListener('input', ()=>{ weights=[]; if(splitMode==='custom') renderAlloc(Math.max(1,parseInt(ppl.value)||1)); splitBill(); });
+
+  document.querySelectorAll('#splitMode .segbtn').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      document.querySelectorAll('#splitMode .segbtn').forEach(x=>x.classList.remove('active'));
+      b.classList.add('active');
+      splitMode = b.dataset.mode;
+      allocBox.classList.toggle('show', splitMode==='custom');
+      if(splitMode==='custom') renderAlloc(Math.max(1, parseInt(ppl.value)||1));
+      splitBill();
+    });
+  });
+  document.getElementById('allocEq').addEventListener('click', ()=>{
+    const N = Math.max(1, parseInt(ppl.value)||1);
+    weights = Array.from({length:N}, ()=> 100/N);
+    syncAlloc(); splitBill();
+  });
 
   // ---- Tabs (ใช้ร่วมกันทั้งกลุ่มบนและกลุ่มล่าง) ----
   function initTabs(barSel, attr, panelMap){
