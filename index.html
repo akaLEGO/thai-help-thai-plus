@@ -45,6 +45,10 @@
   }
   .badge6040 b{color:var(--gold);}
   .sub{font-size:.9rem;color:var(--muted);margin-top:10px;line-height:1.5;}
+  .brandsub{font-family:'Kanit';font-size:.98rem;color:var(--ink);}
+  .brandsub .bname{font-weight:700;}
+  .brandsub .gov{color:var(--gov);font-weight:700;}
+  .brandsub .you{color:var(--you);font-weight:700;}
 
   /* ---- Card ---- */
   .card{
@@ -186,6 +190,8 @@
   .tab:not(.active):active{background:#f4f1ea;}
   .panel{display:none;}
   .panel.active{display:block;}
+  .tabs-info{position:static;top:auto;margin-top:18px;gap:3px;box-shadow:0 12px 30px -26px rgba(13,42,58,.5);}
+  .tabs-info .tab{font-size:.72rem;padding:11px 2px;}
 
   /* ---- Support ---- */
   .support .sup-top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
@@ -204,6 +210,32 @@
   .copy-btn{flex:0 0 auto;border:1px solid #bfe6e8;background:var(--gov-soft);color:var(--gov);font-family:'Kanit';font-weight:600;font-size:.8rem;padding:10px 13px;border-radius:10px;cursor:pointer;white-space:nowrap;}
   .copy-btn.done{background:var(--gov);color:#fff;border-color:var(--gov);}
 
+  /* ---- Comparison table ---- */
+  .cmp{width:100%;border-collapse:collapse;margin-top:6px;font-family:'Kanit';}
+  .cmp th,.cmp td{padding:9px 4px;text-align:center;font-size:.92rem;}
+  .cmp thead th{font-weight:600;font-size:.82rem;border-bottom:2px solid var(--line);}
+  .cmp thead .h-full{color:var(--ink);}
+  .cmp thead .h-gov{color:var(--gov);}
+  .cmp thead .h-you{color:#c2552a;}
+  .cmp tbody tr:nth-child(even){background:#fbfaf6;}
+  .cmp td.c-full{font-weight:600;color:var(--ink);}
+  .cmp td.c-gov{color:var(--gov);font-weight:600;}
+  .cmp td.c-you{color:var(--you);font-weight:600;}
+  .cmp tfoot td{padding:13px 4px;font-weight:700;font-size:1.05rem;border-top:2px solid var(--line);}
+  .cmp tfoot .c-full{color:var(--ink);}
+  .cmp tfoot .c-gov{color:var(--gov);}
+  .cmp tfoot .c-you{color:var(--you);}
+  .cmp tfoot .sub{display:block;font-size:.64rem;font-weight:500;color:var(--muted);margin-top:3px;}
+
+  /* ---- Plans ---- */
+  .plans{display:grid;grid-template-columns:1fr;gap:12px;margin-top:6px;}
+  .plan{border:1px solid var(--line);border-radius:14px;padding:14px 16px;background:#fbfaf6;}
+  .plan .pln-h{font-family:'Kanit';font-weight:600;font-size:.98rem;display:flex;align-items:center;gap:8px;}
+  .plan .pln-d{font-size:.86rem;color:var(--muted);line-height:1.55;margin-top:7px;}
+  .plan .pln-d b{color:var(--ink);font-family:'Kanit';font-weight:600;}
+  .plan.a{border-left:4px solid var(--gov);}
+  .plan.b{border-left:4px solid var(--you);}
+
   footer{text-align:center;font-size:.75rem;color:var(--muted);margin-top:26px;line-height:1.6;}
 </style>
 </head>
@@ -212,12 +244,11 @@
 
   <header>
     <div class="kicker">โครงการรัฐ · เป๋าตัง</div>
-    <h1>ไทยช่วยไทย<span class="plus">พลัส</span></h1>
-    <div class="badge6040">รัฐช่วย <b>60%</b> · คุณจ่าย <b>40%</b></div>
-    <p class="sub">กรอกยอดที่จะใช้จ่าย แล้วระบบจะแบ่งให้ว่ารัฐช่วยเท่าไร และคุณต้องจ่ายเองเท่าไร พร้อมตรวจเพดานสิทธิให้อัตโนมัติ</p>
+    <h1>ยอดนี้จ่ายเท่าไหร่ <span class="plus">เช็กให้เลย!</span></h1>
+    <p class="sub brandsub"><b class="bname">ไทยช่วยไทย<span class="plus">พลัส</span></b> · รัฐช่วย <b class="gov">60%</b> · คุณจ่าย <b class="you">40%</b></p>
   </header>
 
-  <div class="tabs" role="tablist">
+  <div class="tabs tabs-main" role="tablist">
     <button type="button" class="tab active" data-tab="single">🧍 จ่ายคนเดียว</button>
     <button type="button" class="tab" data-tab="split">👥 จ่ายหลายคน</button>
   </div>
@@ -226,7 +257,7 @@
   <div class="panel active" id="panel-single">
   <section class="card">
     <h2>คำนวณยอดที่ต้องจ่าย</h2>
-    <p class="hint">ใส่ราคาสินค้า/บริการต่อครั้ง (เพดานใช้สิทธิ 200 บาท/วัน)</p>
+    <p class="hint">ใส่ราคาสินค้า/บริการต่อครั้ง (รัฐช่วยสูงสุด 200 บาท/วัน · ซื้อได้ถึง ~333 บาท/วันที่ยังได้สิทธิเต็ม)</p>
 
     <div class="field">
       <label for="amt">ยอดใช้จ่าย</label>
@@ -238,8 +269,8 @@
       <div class="chips">
         <button class="chip" data-v="50">50</button>
         <button class="chip" data-v="100">100</button>
-        <button class="chip" data-v="150">150</button>
-        <button class="chip full" data-v="200">เต็มสิทธิ 200</button>
+        <button class="chip" data-v="200">200</button>
+        <button class="chip full" data-v="333">เต็มสิทธิ 333</button>
       </div>
     </div>
 
@@ -275,7 +306,7 @@
   <div class="panel" id="panel-split">
   <section class="card">
     <h2>หารกันหลายคน · จ่ายให้คุ้มที่สุด</h2>
-    <p class="hint">กระจายบิลให้แต่ละคนจ่ายผ่านเป๋าตังของตัวเอง (รับสิทธิคนละไม่เกิน 200) ส่วนเกินเติมเงินจ่ายในแอปได้ แอปคำนวณให้อัตโนมัติ</p>
+    <p class="hint">กระจายบิลให้แต่ละคนจ่ายผ่านเป๋าตังของตัวเอง (รัฐช่วยคนละไม่เกิน 200/วัน คือซื้อได้ถึงคนละ ~333) ส่วนเกินเติมเงินจ่ายในแอปได้ แอปคำนวณให้อัตโนมัติ</p>
 
     <div class="row2">
       <div class="field" style="flex:2">
@@ -328,9 +359,18 @@
   </section>
   </div>
 
+  <!-- Bottom info tabs -->
+  <div class="tabs tabs-info" role="tablist">
+    <button type="button" class="tab active" data-itab="track">📈 เช็กคงเหลือ</button>
+    <button type="button" class="tab" data-itab="table">📊 ตารางเทียบ</button>
+    <button type="button" class="tab" data-itab="plan">💡 สูตรใช้คุ้ม</button>
+    <button type="button" class="tab" data-itab="rules">📋 เงื่อนไข</button>
+  </div>
+
   <!-- Tracker -->
+  <div class="panel active" id="ipanel-track">
   <section class="card">
-    <h2>ติดตามสิทธิคงเหลือเดือนนี้</h2>
+    <h2>เช็กสิทธิคงเหลือเดือนนี้</h2>
     <p class="hint">กรอกยอดที่รัฐช่วยจ่ายไปแล้วในเดือนนี้ เพื่อดูสิทธิที่เหลือ</p>
     <div class="tracker-grid">
       <div class="mini">
@@ -341,22 +381,68 @@
     <div class="remain">
       <div class="rt">สิทธิรัฐคงเหลือเดือนนี้</div>
       <div class="rval">฿<span id="remainVal">1,000</span></div>
-      <div class="rday">ใช้สิทธิรัฐเต็มเพดานได้อีกราว <b id="remainDay">9</b> วัน · เทียบยอดใช้จ่ายรวมได้อีก ฿<span id="remainSpend">1,667</span></div>
+      <div class="rday">ใช้สิทธิรัฐเต็มเพดานได้อีกราว <b id="remainDay">5</b> วัน</div>
+      <div class="rday">เติมเงินเองอีก ฿<b id="remainSelf">666.67</b> → ซื้อได้รวมอีก ฿<span id="remainSpend">1,666.67</span></div>
     </div>
   </section>
+  </div>
+
+  <!-- Comparison table -->
+  <div class="panel" id="ipanel-table">
+  <section class="card">
+    <h2>ตารางสัดส่วนการจ่ายเงิน</h2>
+    <p class="hint">รัฐช่วย 60% / เราจ่ายเอง 40% ของยอดซื้อในแต่ละวัน (รัฐช่วยสูงสุด 200 บาท/วัน)</p>
+    <table class="cmp">
+      <thead>
+        <tr>
+          <th class="h-full">🛒 ราคาเต็ม<br>(100%)</th>
+          <th class="h-gov">🛡️ รัฐช่วยจ่าย<br>(60%)</th>
+          <th class="h-you">👛 เราจ่ายเอง<br>(40%)</th>
+        </tr>
+      </thead>
+      <tbody id="cmpBody"></tbody>
+      <tfoot>
+        <tr>
+          <td class="c-full">333.33<span class="sub">ซื้อครบเพื่อใช้สิทธิเต็ม</span></td>
+          <td class="c-gov">200<span class="sub">เต็มโควตาต่อวัน</span></td>
+          <td class="c-you">133.33<span class="sub">ส่วนที่จ่ายเอง</span></td>
+        </tr>
+      </tfoot>
+    </table>
+  </section>
+  </div>
+
+  <!-- Plans -->
+  <div class="panel" id="ipanel-plan">
+  <section class="card">
+    <h2>วางแผนใช้สิทธิให้คุ้ม 1,000 บาท/เดือน</h2>
+    <p class="hint">รัฐจำกัดสิทธิ 1,000 บาท/เดือน เลือกแผนตามไลฟ์สไตล์เพื่อใช้สิทธิให้หมดพอดี</p>
+    <div class="plans">
+      <div class="plan a">
+        <div class="pln-h">🛍️ แบบที่ 1 · สายซื้อของใหญ่</div>
+        <div class="pln-d">ซื้อหนักทีละเยอะ เลือก <b>5 วัน/เดือน</b> ใช้สิทธิเต็มเพดาน <b>200 บาท/วัน</b> (ซื้อยอด 333.33 บาทขึ้นไป) — ใช้สิทธิครบเร็ว แต่ครบ 5 วันแล้ววงเงินเดือนนั้นหมดทันที</div>
+      </div>
+      <div class="plan b">
+        <div class="pln-h">🥤 แบบที่ 2 · สายลดค่าครองชีพรายวัน</div>
+        <div class="pln-d">กระจาย 1,000 บาทให้ใช้ได้หลายวัน เช่น<br>• <b>20 วัน/เดือน</b> → รัฐช่วยวันละ 50 บาท (ซื้อรวมวันละ 83.33)<br>• <b>10 วัน/เดือน</b> → รัฐช่วยวันละ 100 บาท (ซื้อรวมวันละ 166.67)</div>
+      </div>
+    </div>
+  </section>
+  </div>
 
   <!-- Conditions -->
+  <div class="panel" id="ipanel-rules">
   <section class="card">
     <h2>เงื่อนไขวงเงิน</h2>
     <p class="hint">หลักเกณฑ์สำคัญของโครงการ (สิทธิไม่ทบไปเดือนถัดไป)</p>
     <div class="rules">
       <div class="rule">
-        <div class="rl">ต่อวัน · ใช้สิทธิได้</div>
+        <div class="rl">ต่อวัน · รัฐช่วยสูงสุด</div>
         <div class="rv">฿200 <span>/ วัน</span></div>
       </div>
       <div class="rule">
-        <div class="rl">ต่อวัน · รัฐ / คุณ</div>
-        <div class="rv">120 <span>/ 80</span></div>
+        <div class="rl">ต่อวัน · ซื้อได้ถึง (สิทธิเต็ม)</div>
+        <div class="rv">฿333 <span>/ วัน</span></div>
       </div>
       <div class="rule">
         <div class="rl">ต่อเดือน · รัฐช่วย</div>
@@ -373,9 +459,10 @@
     </div>
     <div class="timeline">
       <span>💡</span>
-      <span>ถ้าใช้สิทธิรัฐเต็มเพดานวันละ 120 บาท จะใช้สิทธิรัฐครบ 1,000 บาท/เดือนได้ภายในราว <b>9 วัน</b> ต่อเดือน</span>
+      <span>ถ้าใช้สิทธิรัฐเต็มเพดานวันละ 200 บาท จะใช้สิทธิรัฐครบ 1,000 บาท/เดือนได้ภายในราว <b>5 วัน</b> ต่อเดือน</span>
     </div>
   </section>
+  </div>
 
   <!-- Support -->
   <section class="card support">
@@ -402,11 +489,11 @@
 </div>
 
 <script>
-  const DAILY_CAP = 200;     // เพดานยอดใช้สิทธิต่อวัน
-  const GOV_RATE = 0.6;
-  const YOU_RATE = 0.4;
-  const GOV_DAILY = DAILY_CAP * GOV_RATE; // 120
-  const MONTH_GOV = 1000;
+  const GOV_DAILY = 200;                  // รัฐช่วยจ่ายสูงสุด/วัน (วงเงินรัฐ ไม่ใช่ยอดซื้อ)
+  const GOV_RATE = 0.6;                    // รัฐช่วย 60%
+  const YOU_RATE = 0.4;                    // จ่ายเอง 40%
+  const DAILY_CAP = GOV_DAILY / GOV_RATE;  // = 333.33 ยอดซื้อ/วันที่ยังได้สิทธิเต็ม (รัฐช่วยแตะเพดาน 200)
+  const MONTH_GOV = 1000;                  // รัฐช่วยสูงสุด/เดือน/คน
 
   const amt = document.getElementById('amt');
   const result = document.getElementById('result');
@@ -428,7 +515,7 @@
     result.classList.add('show');
 
     const eligible = Math.min(p, DAILY_CAP);   // ส่วนที่เข้าเงื่อนไขรับสิทธิ
-    const gov = eligible * GOV_RATE;            // รัฐช่วย 60% (สูงสุด 120)
+    const gov = eligible * GOV_RATE;            // รัฐช่วย 60% (สูงสุด 200/วัน)
     const excess = Math.max(0, p - DAILY_CAP);  // ส่วนเกินเพดาน จ่ายเองเต็ม
     const you = eligible * YOU_RATE + excess;
 
@@ -445,9 +532,9 @@
       barOver.style.display = 'flex';
       barOver.style.flexBasis = overW + '%';
       barOver.textContent = overW > 12 ? 'จ่ายเต็ม' : '';
-      govPct.textContent = 'เต็มเพดานวันละ 120 บาท';
-      youPct.textContent = '80 (40%) + ส่วนเกิน ' + fmt(excess);
-      overText.innerHTML = 'ยอดเกินเพดานวันละ 200 บาท ส่วนที่เกิน <b>' + fmt(excess) + ' บาท</b> ไม่ได้รับสิทธิ ต้องจ่ายเองเต็มจำนวน';
+      govPct.textContent = 'เต็มเพดานรัฐช่วยวันละ 200 บาท';
+      youPct.textContent = fmt(eligible*YOU_RATE) + ' (40%) + ส่วนเกิน ' + fmt(excess);
+      overText.innerHTML = 'รัฐช่วยแตะเพดาน 200 บาท/วันแล้ว (ยอดซื้อเกิน ~333 บาท) ส่วนที่เกิน <b>' + fmt(excess) + ' บาท</b> ไม่ได้รับสิทธิ ต้องจ่ายเอง (ผ่านเป๋าตัง) เต็มจำนวน';
       overNote.classList.add('warn');
     }else{
       barOver.style.display = 'none';
@@ -469,16 +556,28 @@
   const remainVal = document.getElementById('remainVal');
   const remainDay = document.getElementById('remainDay');
   const remainSpend = document.getElementById('remainSpend');
+  const remainSelf = document.getElementById('remainSelf');
 
   function track(){
     const u = Math.min(Math.max(parseFloat(used.value)||0,0), MONTH_GOV);
     const remain = MONTH_GOV - u;
     remainVal.textContent = fmt(remain);
     remainDay.textContent = Math.ceil(remain / GOV_DAILY);
-    remainSpend.textContent = fmt(remain / GOV_RATE); // ยอดใช้จ่ายรวมที่ยังได้สิทธิ
+    remainSpend.textContent = fmt(remain / GOV_RATE);            // ยอดซื้อรวมที่ยังได้สิทธิ
+    remainSelf.textContent = fmt(remain * YOU_RATE / GOV_RATE);  // ส่วนที่ต้องเติม/จ่ายเอง
   }
   used.addEventListener('input', track);
   track();
+
+  // ---- Comparison table (สร้างจากค่าคงที่ ให้ตรงกับสูตรเสมอ) ----
+  const cmpBody = document.getElementById('cmpBody');
+  [10,20,30,40,50,100,150,200,250,300].forEach(p=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = '<td class="c-full">'+fmt(p)+'</td>'
+      + '<td class="c-gov">'+fmt(p*GOV_RATE)+'</td>'
+      + '<td class="c-you">'+fmt(p*YOU_RATE)+'</td>';
+    cmpBody.appendChild(tr);
+  });
 
   // ---- Split bill ----
   const bill = document.getElementById('bill');
@@ -506,7 +605,7 @@
 
     // หารบิลเท่ากันต่อคน แล้วแยกส่วน
     const perBill   = B / N;                          // ยอดบิลของแต่ละคน
-    const perApp    = Math.min(perBill, DAILY_CAP);   // ส่วนที่ได้สิทธิ (<=200)
+    const perApp    = Math.min(perBill, DAILY_CAP);   // ส่วนที่ได้สิทธิ (<=333.33 → รัฐช่วย <=200)
     const perExcess = Math.max(0, perBill - DAILY_CAP); // ส่วนเกิน ไม่ได้สิทธิ
     const perGov    = perApp * GOV_RATE;              // รัฐช่วย/คน
     const perSelf   = perApp * YOU_RATE + perExcess;  // จ่ายเองจากกระเป๋าตัง/คน
@@ -563,8 +662,8 @@
     if(excess > 0){
       const needed = Math.ceil(B / DAILY_CAP);
       splitWarn.classList.add('warn');
-      splitWarnText.innerHTML = 'บิลเกินเพดานสิทธิรวมของกลุ่ม (' + N + ' คน × 200 = ฿' + fmt(eligible) + ')'
-        + ' ส่วนเกิน <b>฿' + fmt(excess) + '</b> ไม่ได้รับสิทธิ ต้องจ่ายเองเต็มจำนวน (เติมเงินจ่ายผ่านแอปได้ แอปคำนวณให้อัตโนมัติ)'
+      splitWarnText.innerHTML = 'บิลเกินเพดานสิทธิรวมของกลุ่ม (' + N + ' คน ซื้อได้ถึงคนละ ~333 = ฿' + fmt(eligible) + ' ที่ยังได้สิทธิเต็ม)'
+        + ' ส่วนเกิน <b>฿' + fmt(excess) + '</b> ไม่ได้รับสิทธิ ต้องจ่ายเอง (ผ่านเป๋าตัง) เต็มจำนวน (เติมเงินจ่ายผ่านแอปได้ แอปคำนวณให้อัตโนมัติ)'
         + ' — ถ้าอยากได้สิทธิเต็มบิลต้องมีอย่างน้อย <b>' + needed + ' คน</b> หรือทยอยจ่ายส่วนเกินในวันถัดไป';
     } else {
       splitWarn.classList.remove('warn');
@@ -573,19 +672,29 @@
   bill.addEventListener('input', splitBill);
   ppl.addEventListener('input', splitBill);
 
-  // ---- Tabs ----
-  const tabBtns = document.querySelectorAll('.tab');
-  const panels = {
+  // ---- Tabs (ใช้ร่วมกันทั้งกลุ่มบนและกลุ่มล่าง) ----
+  function initTabs(barSel, attr, panelMap){
+    const btns = document.querySelectorAll(barSel + ' .tab');
+    btns.forEach(t=>{
+      t.addEventListener('click', ()=>{
+        btns.forEach(x=>x.classList.remove('active'));
+        t.classList.add('active');
+        Object.values(panelMap).forEach(p=>p.classList.remove('active'));
+        panelMap[t.dataset[attr]].classList.add('active');
+      });
+    });
+  }
+  // กลุ่มบน: จ่ายคนเดียว / จ่ายหลายคน
+  initTabs('.tabs-main', 'tab', {
     single: document.getElementById('panel-single'),
     split:  document.getElementById('panel-split')
-  };
-  tabBtns.forEach(t=>{
-    t.addEventListener('click', ()=>{
-      tabBtns.forEach(x=>x.classList.remove('active'));
-      t.classList.add('active');
-      Object.values(panels).forEach(p=>p.classList.remove('active'));
-      panels[t.dataset.tab].classList.add('active');
-    });
+  });
+  // กลุ่มล่าง: ติดตาม / ตารางเทียบ / ทิปส์ใช้คุ้ม / เงื่อนไข
+  initTabs('.tabs-info', 'itab', {
+    track: document.getElementById('ipanel-track'),
+    table: document.getElementById('ipanel-table'),
+    plan:  document.getElementById('ipanel-plan'),
+    rules: document.getElementById('ipanel-rules')
   });
 
   // ---- Support ----
